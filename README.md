@@ -3,6 +3,6 @@ The EML (Electromagnetic Library) can be imported into Unity applications to sim
 
 This is an academic project, created as a part of my fourth year of study at Lancaster University, to complete the MSci Computer Science course.
 
-The repository contains a Unity package to facilitate the import process, as well as the source code.
+The repository contains a Unity package to facilitate the import process, in addition to the project source code.
 
-For more information on this project, please review my dissertation provided in the repository, which covers the project motivation, design, implementation and testing.
+For more information on this project, please read the accompanying dissertation, which covers the project motivation, design, implementation and testing.
