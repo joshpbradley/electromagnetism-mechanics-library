@@ -7,6 +7,8 @@ The repository contains a Unity package to facilitate the import process, in add
 
 For more information on this project, please read the accompanying dissertation, which covers the project motivation, design, implementation and testing.
 
+**GALLERY**
+
 ![1](https://user-images.githubusercontent.com/48052531/233477584-03e72b12-72e9-4dd9-a6bd-8aaadc5c5b56.png)
 
 ![2](https://user-images.githubusercontent.com/48052531/233477600-d497c21a-8a7a-4100-81d3-baed023ab8ab.png)
