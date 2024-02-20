@@ -1,7 +1,7 @@
-# Electromagnetic Library (EML)
+# Electromagnetism Mechanics Library (EML)
 Project completed in 2022, during year 4 of my MSci Computer Science degree, completed at Lancaster University.
 
-The EML (Electromagnetic Library) can be imported into Unity applications to simulate the deflection of charged particles in the presence of a non-linear magnetic field. Specifically, this library simulates the deflection of charged particles due to the Lorentz force, around magnetic dipoles.
+The EML can be imported into Unity applications to simulate the deflection of charged particles in the presence of a non-linear magnetic field. Specifically, this library simulates the deflection of charged particles due to the Lorentz force, around magnetic dipoles.
 
 The repository contains a Unity package to facilitate the import process, in addition to the project source code.
 
