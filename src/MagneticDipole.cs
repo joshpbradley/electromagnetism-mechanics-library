@@ -52,12 +52,10 @@ namespace ElectromagnetismMechanicsLibrary
             // The displacement vector between the supplied position and the magnetic dipole.
             Vector3 displacement = position - transform.position;
             // The magnitude of the displacement vector.
-            float distance = displacement.magnitude;
+            Vector3 unit = displacement.Normalize;
 
-            Vector3 term1 = 3 * Vector3.Dot(magneticDipoleMoment, displacement) * displacement / Mathf.Pow(distance, 5);
-            Vector3 term2 = magneticDipoleMoment / Mathf.Pow(distance, 3);
-
-            return term1 - term2;
+            // (3m(_r . _m) - _m) / r^3 where "_" indicates unit vector.
+            return (3 * unit * Vector3.Dot(unit, magneticDipoleMoment) - magneticDipoleMoment) / Mathf.Pow(displacement, 3);
         }
 
         /// <summary>

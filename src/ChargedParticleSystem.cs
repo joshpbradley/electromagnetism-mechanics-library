@@ -20,25 +20,37 @@ namespace ElectromagnetismMechanicsLibrary
 		/// is individually assigned to each particle
 		/// </summary>
 		[System.Serializable]
-		sealed internal class ChargeBoundPair : System.IEquatable<ChargeBoundPair>
+		sealed protected class ChargeBoundPair : System.IEquatable<ChargeBoundPair>
         {
 			/// <summary>
 			/// The first bound that can determine the charge value assigned to a charged particle.
 			/// </summary>
 			[SerializeField]
-			internal int _boundOne = 1;
+			protected int _boundOne = 1;
 			/// <summary>
-			/// The first bound that can determine the charge value assigned to a charged particle.
+			/// The second bound that can determine the charge value assigned to a charged particle.
 			/// </summary>
 			[SerializeField]
-			internal int _boundTwo = 1;
+			protected int _boundTwo = 1;
 
-			/// <summary>
-			/// Constructor for the <see cref="ChargeBoundPair"/> class.
-			/// </summary>
-			/// <param name="BoundOne">The first bound that can determine the charge value assigned to a charged particle.</param>
-			/// <param name="BoundTwo">The first bound that can determine the charge value assigned to a charged particle.</param>
-			internal ChargeBoundPair(int BoundOne, int BoundTwo)
+            /// <summary>
+            /// Redefines the equality of this type so that two objects are considered equal if they both 
+            /// derive from the <see cref="ChargeBoundPair"/> class and share the same bound values.
+            /// </summary>
+            /// <param name="obj">The object that is compared to the this instance.</param>
+            /// <returns>True if <paramref name="obj"/> and this instance both derive from the <see cref="ChargeBoundPair"/> class
+            /// and share the same bounds.</returns>
+            public bool Equals(ChargeBoundPair other)
+            {
+                return other._boundOne == _boundOne && other._boundTwo == _boundTwo;
+            }
+
+            /// <summary>
+            /// Constructor for the <see cref="ChargeBoundPair"/> class.
+            /// </summary>
+            /// <param name="BoundOne">The first bound that can determine the charge value assigned to a charged particle.</param>
+            /// <param name="BoundTwo">The second bound that can determine the charge value assigned to a charged particle.</param>
+            protected ChargeBoundPair(int BoundOne, int BoundTwo)
 			{
 				_boundOne = BoundOne;
 				_boundTwo = BoundTwo;
@@ -49,28 +61,16 @@ namespace ElectromagnetismMechanicsLibrary
 			/// <summary>
 			/// Swaps the values stored in the Bound instance variables if BoundOne is less than BoundTwo.
 			/// </summary>
-			internal void BoundSwap()
+			void BoundSwap()
 			{
 				if (_boundOne < _boundTwo)
 				{
 					// Swaps the ordering of the upper/lower bound pair tuple.
-					(_boundOne, _boundTwo) = (_boundTwo, _boundOne);
+					(_boundOne = _boundTwo) = (_boundTwo, _boundOne);
 				}
 			}
 
-			/// <summary>
-			/// Redefines the equality of this type so that two objects are considered equal if they both 
-			/// derive from the <see cref="ChargeBoundPair"/> class and share the same bound values.
-			/// </summary>
-			/// <param name="obj">The object that is compared to the this instance.</param>
-			/// <returns>True if <paramref name="obj"/> and this instance both derive from the <see cref="ChargeBoundPair"/> class
-			/// and share the same bounds.</returns>
-			public bool Equals(ChargeBoundPair other)
-            {
-				return other._boundOne == _boundOne && other._boundTwo == _boundTwo;
-			}
-
-			internal static ChargeBoundPair[] RemoveDuplicates(ChargeBoundPair[] cbp)
+			static ChargeBoundPair[] RemoveDuplicates(ChargeBoundPair[] cbp)
             {
 				return cbp.Distinct().ToArray();
             }
@@ -87,13 +87,14 @@ namespace ElectromagnetismMechanicsLibrary
 		/// The collection of <see cref="MagneticDipole"/> components that can influence particles from this <see cref="ChargedParticleSystem"/>.
 		/// </summary>
 		[Tooltip("Assign the Magnetic Dipole component(s) that you want to influence this Charged Particle System's emitted particles.")]
-		public MagneticDipole[] SubscribedMagneticDipoles;
+        [SerializeField]
+        protected MagneticDipole[] SubscribedMagneticDipoles;
 
 		/// <summary>
 		/// The collection of charge data and B data for each particle.
 		/// Charge is stored in the w component, while the B vector is stored in the x, y, & z components.
 		/// </summary>
-		readonly List<Vector4> _chargeAndBData = new();
+		const List<Vector4> _chargeAndBData = new();
 
 		/// <summary>
 		/// Used to denote that a neutral charge for a particle has been assigned a charge value.
@@ -112,7 +113,6 @@ namespace ElectromagnetismMechanicsLibrary
 			get => _attachedParticleSystem;
         }
 			
-
 		/// <summary>
 		/// The collection of particles that are currently in transit.
 		/// </summary>
@@ -123,21 +123,15 @@ namespace ElectromagnetismMechanicsLibrary
 			_attachedParticleSystem = gameObject.GetComponent<ParticleSystem>();
 			SubscribedMagneticDipoles = SubscribedMagneticDipoles.Distinct().ToArray();
 
-			if (!SimulationCheck(true))
+			if (!SimulationCheck(false))
 			{
 				enabled = false;
 				return;
 			}
 
-			// Remove duplicate values in the ChargeBound array.
-			_chargeBounds = ChargeBoundPair.RemoveDuplicates(_chargeBounds);
-
-			// The upper/lower bounds for ChargeBoundPair instances are swapped if their BoundOne value is less than the corresponding BoundTwo value.
-			foreach (ChargeBoundPair cb in _chargeBounds)
-			{
-				cb.BoundSwap();
-			}
-		}
+            // Remove duplicate values in the ChargeBound array.
+            _chargeBounds = ChargeBoundPair.RemoveDuplicates(_chargeBounds);
+        }
 
 		void FixedUpdate()
 		{
@@ -147,45 +141,46 @@ namespace ElectromagnetismMechanicsLibrary
 			// Gets the particle instances associated with the _attachedParticleSystem member.
 			_emittedParticles = new ParticleSystem.Particle[_attachedParticleSystem.particleCount];
 			_attachedParticleSystem.GetParticles(_emittedParticles);
-
 		
 			_attachedParticleSystem.GetCustomParticleData(_chargeAndBData, ParticleSystemCustomData.Custom2);
 
-			UpdateBData();
-			UpdateChargeData();
+            UpdateChargeData();
+            UpdateBData();
 
 			_attachedParticleSystem.SetCustomParticleData(_chargeAndBData, ParticleSystemCustomData.Custom2);
 
 			/*
-			 * Updates the velocities for he particles emitted by the _attachedParticleSystem field.
-			 * Derived from the formula: F = E + q(vxB). (Where E is irrelevant to magnetic field interaction.)
+			 * Updates the velocities for the particles emitted by the _attachedParticleSystem field.
+			 * Derived from the formula: F = qE + q(vxB). (Where qE is irrelevant to magnetic field interaction.)
 			 */
 			for (int i = 0; i < _attachedParticleSystem.particleCount; i++)
 			{
 				if (_chargeAndBData[i].w == NEUTRAL_FLAG || _emittedParticles[i].totalVelocity.magnitude == 0) continue;
 
-				// The external forces module multiplier has influences the effect's strength.
-				/*
-				 * The cross produce value is negated to account for the difference between the left-handed coordinate system (Unity)
+                // The external forces module multiplier influences the effect's strength.
+                /*
+				 * The cross product operands have been swapped to account for the difference between the left-handed coordinate system (Unity)
 				 * compared to the right-handed coordinate system used in physics.
 				 */
-				_emittedParticles[i].velocity += _chargeAndBData[i].w * _attachedParticleSystem.externalForces.multiplier * Vector3.Cross(_chargeAndBData[i], _emittedParticles[i].totalVelocity);
+                _emittedParticles[i].velocity += _attachedParticleSystem.externalForces.multiplier * _chargeAndBData[i].w * Vector3.Cross(_chargeAndBData[i], _emittedParticles[i].totalVelocity);
 			}
 
 			// Sets the new velocities calculated for the _attachedParticleSystem member.
 			_attachedParticleSystem.SetParticles(_emittedParticles);
 		}
 
-		/// <summary> Updates the charge values of emitted particles. The charge is only updated for particles that haven't had a charge applied to them previously.</summary>
+		/// <summary>
+		/// Updates the charge values of emitted particles. The charge is only updated for particles that haven't had a charge applied to them previously.
+		/// </summary>
 		void UpdateChargeData()
 		{
 			float charge;
 			ChargeBoundPair boundSelection;
 
-			for (int i = 0; i < _chargeAndBData.Count; i++)
-			{
-				// True if the particle has had a charge assigned to it.
-				if (_chargeAndBData[i].w != 0) continue;
+            foreach (var cabd in _chargeAndBData)
+            {
+				// Don't assign a charge value to particles that have already been assigned one.
+				if (cabd.w != 0) continue;
 
 				// Selects a random ChargeBoundPair instance for charge selection.
 				boundSelection = _chargeBounds[_chargeBounds.Length == 1 ? 0 : Random.Range(0, _chargeBounds.Length)];
@@ -194,13 +189,13 @@ namespace ElectromagnetismMechanicsLibrary
 				boundSelection._boundOne : 
 				Random.Range(boundSelection._boundTwo, boundSelection._boundOne + 1);
 
-				/*
+                /*
 				 * If the selected charge value for the particle is zero then instead set it to the neutral flag.
 				 * 
 				 * This flag has the value of .5f, which cannot be assigned to a particle as it is non-integer.
 				 * This means that if the charge value is found to be the flag value, velocity and B computation can be skipped.
 				 */
-				_chargeAndBData[i] = new Vector4(_chargeAndBData[i].x, _chargeAndBData[i].y, _chargeAndBData[i].z, charge == 0 ? NEUTRAL_FLAG : charge);
+                cabd = new Vector4(cabd.x, cabd.y, cabd.z, charge == 0 ? NEUTRAL_FLAG : charge);
 			}
 		}
 
@@ -213,6 +208,9 @@ namespace ElectromagnetismMechanicsLibrary
 
 			for (int i = 0; i < _chargeAndBData.Count; i++)
 			{
+				// Don't update B for neutral particles - it is wasted computation.
+				if (_chargeAndBData[i].w == NEUTRAL_FLAG) continue;
+
 				B = Vector3.zero;
 
 				// Calculates the total B value acting on each particle, as a summation of the individial B values from each subscribed MagneticDipole instance.
@@ -228,8 +226,9 @@ namespace ElectromagnetismMechanicsLibrary
 
 		/// <summary>
 		/// Determines whether the internal state of this component passes validation for remaining enabled.
+		/// Validation is failed if:
 		/// the external forces module of the particle system isn't enabled;
-		/// the number of ChargeBoundPair assigned to this component is zero, or
+		/// the number of ChargeBounds assigned to this component is zero, or
 		/// the number of magnetic dipoles assigned to this component is zero.
 		/// </summary>
 		/// <remarks>
@@ -239,7 +238,7 @@ namespace ElectromagnetismMechanicsLibrary
 		/// </remarks>
 		public bool SimulationCheck(bool showWarnings)
 		{
-			bool canSimulate = true;
+			var canSimulate = true;
 
 			if (!_attachedParticleSystem.externalForces.enabled)
 			{
@@ -268,14 +267,14 @@ namespace ElectromagnetismMechanicsLibrary
 			return canSimulate;
 		}
 
-		/// <summary>
-		/// Disables the ChargedParticleSystem if
-		/// the external forces module of the particle system isn't enabled, or
-		/// the number of magnetic dipoles assigned to this component is zero.
-		/// </summary>
-		void SimulationCheckRuntime()
+        /// <summary>
+        /// Disables the ChargedParticleSystem if
+        /// the external forces module of the particle system isn't enabled, or
+        /// the number of magnetic dipoles assigned to this component is zero.
+        /// </summary>
+        void SimulationCheckRuntime()
 		{
-			bool canSimulate = true;
+			var canSimulate = true;
 
 			if (!_attachedParticleSystem.externalForces.enabled)
 			{
@@ -295,14 +294,11 @@ namespace ElectromagnetismMechanicsLibrary
 				canSimulate = false;
 			}
 
-			if(!canSimulate)
-            {
-				enabled = false;
-			}
+			enabled = canSimulate;
 		}
 
 		/// <summary>
-		/// Sets the <see cref="_chargeBounds"/> field's values to the values provided in <param name="replacementBounds">.
+		/// Sets the <see cref="_chargeBound"/> field's values to the values provided in <param name="replacementBounds">.
 		/// </summary>
 		/// <param name="replacementBounds"></param>
 		/// <returns>True if the ChargeBound field has been updated, else false.</returns>
@@ -331,9 +327,9 @@ namespace ElectromagnetismMechanicsLibrary
 			_attachedParticleSystem.GetCustomParticleData(_chargeAndBData, ParticleSystemCustomData.Custom2);
 
 			// Update the B vector for the particles.
-			for (int i = 0; i < _chargeAndBData.Count; i++)
+			foreach (var cabd in _chargeAndBData)
 			{
-				_chargeAndBData[i] = new Vector4(_chargeAndBData[i].x, _chargeAndBData[i].y, _chargeAndBData[i].z, 0);
+				cabd = new Vector4(cabd.x, cabd.y, cabd.z, 0);
 			}
 
 			return true;
@@ -355,9 +351,9 @@ namespace ElectromagnetismMechanicsLibrary
 			var chargeBoundsCopy = new List<(int, int)>();
 
 			// Copies the bound data from the ChargeBound field into the tuple list.
-			for (int i = 0; i < _chargeBounds.Length; i++)
+			foreach (var cbp in _chargeBounds)
 			{
-				chargeBoundsCopy.Add((_chargeBounds[i]._boundOne, _chargeBounds[i]._boundTwo));
+				chargeBoundsCopy.Add((cbp._boundOne, cbp._boundTwo));
 			}
 
 			// Returns the tuple list holding the charge bound data.
