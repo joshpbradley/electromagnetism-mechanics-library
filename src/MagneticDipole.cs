@@ -13,7 +13,7 @@ namespace ElectromagnetismMechanicsLibrary
         /// The strength of the magnetic dipole's magnetic field. 
         /// </summary>
         /// <remarks>The strength should be decided in conjunction with the velocity of incoming <see cref="ChargedParticleSystem"/> particles.<remarks>
-        [Tooltip("The strength of the magnetic field. This is needs to be a positive value. Note: particle displacement relative to this object's transform; particle velocity; particle charge and the Particle System (external forces module) multiplier will all affect magnetic field influence as well as Strength.")]
+        [Tooltip("The strength of the magnetic field. This needs to be a positive value. Note: particle displacement relative to this object's transform; particle velocity; particle charge and the Particle System (external forces module) multiplier will all affect magnetic field influence as well as Strength.")]
         [SerializeField]
         float _strength = 1;
 
@@ -26,7 +26,7 @@ namespace ElectromagnetismMechanicsLibrary
         void Awake()
         {
             // Checks whether Strength is negative, and sets to positive if it is.
-            if(Strength < 0)
+            if (Strength < 0)
             {
                 Debug.LogWarning("Strength should be a positive value. Automatically converted to a positive value. " +
                     "To reverse the Magnetic Flux Density vectors, rotate the Magnetic Dipole.");
@@ -52,10 +52,10 @@ namespace ElectromagnetismMechanicsLibrary
             // The displacement vector between the supplied position and the magnetic dipole.
             Vector3 displacement = position - transform.position;
             // The magnitude of the displacement vector.
-            Vector3 unit = displacement.Normalize;
+            Vector3 unitDisplacement = Vector3.Normalize(displacement);
 
-            // (3m(_r . _m) - _m) / r^3 where "_" indicates unit vector.
-            return (3 * unit * Vector3.Dot(unit, magneticDipoleMoment) - magneticDipoleMoment) / Mathf.Pow(displacement, 3);
+            // The formula for calculating magnetic flux density: 3 * _r * (_r . m) - m) / |r|^3 where "_" indicates unit vector.
+            return (3 * unitDisplacement * Vector3.Dot(unitDisplacement, magneticDipoleMoment) - magneticDipoleMoment) / Mathf.Pow(displacement.magnitude, 3);
         }
 
         /// <summary>
