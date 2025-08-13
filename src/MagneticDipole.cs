@@ -52,10 +52,14 @@ namespace ElectromagnetismMechanicsLibrary
             // The displacement vector between the supplied position and the magnetic dipole.
             Vector3 displacement = position - transform.position;
             // The magnitude of the displacement vector.
-            Vector3 unitDisplacement = Vector3.Normalize(displacement);
+            float distance = displacement.magnitude;
 
-            // The formula for calculating magnetic flux density: 3 * _r * (_r . m) - m) / |r|^3 where "_" indicates unit vector.
-            return (3 * unitDisplacement * Vector3.Dot(unitDisplacement, magneticDipoleMoment) - magneticDipoleMoment) / Mathf.Pow(displacement.magnitude, 3);
+            // Formula: μ0/4[pi] * (3r(m . r) / (r^5) - m / (r^3))
+            // μ0/4[pi] is ignored as a constant value.
+            Vector3 term1 = 3 * displacement * Vector3.Dot(magneticDipoleMoment, displacement) / Mathf.Pow(distance, 5);
+            Vector3 term2 = magneticDipoleMoment / Mathf.Pow(distance, 3);
+
+            return term1 - term2;
         }
 
         /// <summary>
