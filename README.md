@@ -3,8 +3,6 @@ Project completed in 2022, during year 4 of my MSci Computer Science degree, com
 
 The EML can be imported into Unity applications to simulate the deflection of charged particles in the presence of a non-linear magnetic field. Specifically, this library simulates the deflection of charged particles due to the Lorentz force, around magnetic dipoles.
 
-The repository contains a Unity package to facilitate the import process, in addition to the project source code.
-
 For more information on this project, please read the accompanying dissertation, which covers the project motivation, design, implementation and testing.
 
 **GALLERY**
